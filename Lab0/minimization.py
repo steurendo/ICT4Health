@@ -69,9 +69,10 @@ class SolverSteepestDescent(SolverLLS):
         y = self.y
         w_hat0 = np.random.rand(A.shape[1])
         i = 0
+        print("culooooooo")
+        hessian = 2 * A.T @ A
         while True:
             gradient = 2 * A.T @ (A @ w_hat0 - y)
-            hessian = 2 * A.T @ A
             N = np.linalg.norm(gradient) ** 2
             D = gradient.T @ hessian @ gradient
             gamma = N / D
