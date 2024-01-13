@@ -23,11 +23,11 @@ def condition_max_iterations(iters, max_iters): return iters >= max_iters
 
 
 class StoppingCondition(Enum):
-    absolute_improvement = auto()
-    relative_improvement = auto()
-    absolute_value = auto()
-    relative_value = auto()
-    max_iterations = auto()
+    absolute_improvement = 'absolute_improvement'
+    relative_improvement = 'relative_improvement'
+    absolute_value = 'absolute_value'
+    relative_value = 'relative_value'
+    max_iterations = 'max_iterations'
 
 
 class SolverMinProblem:
@@ -66,21 +66,23 @@ class SolverGradient(SolverMinProblem):
             w_hat1 = w_hat0 - gamma * gradient
             i += 1
 
-            if stopping_condition == StoppingCondition.absolute_value:
+            f0 = np.linalg.norm(y - A @ w_hat0) ** 2
+            f1 = np.linalg.norm(y - A @ w_hat1) ** 2
+            if stopping_condition.value == StoppingCondition.absolute_value.value:
                 condition_met = condition_absolute_value(w_hat0, w_hat1, eps=cond_eps)
-            elif stopping_condition == StoppingCondition.relative_value:
+            elif stopping_condition.value == StoppingCondition.relative_value.value:
                 condition_met = condition_relative_value(w_hat0, w_hat1, eps=cond_eps)
-            elif stopping_condition == StoppingCondition.max_iterations:
+            elif stopping_condition.value == StoppingCondition.max_iterations.value:
                 condition_met = condition_max_iterations(i, cond_Nit)
+            elif stopping_condition.value == StoppingCondition.absolute_improvement.value:
+                condition_met = condition_absolute_improvement(f0, f1, eps=cond_eps)
             else:
-                f0 = np.linalg.norm(y - A @ w_hat0) ** 2
-                f1 = np.linalg.norm(y - A @ w_hat1) ** 2
-                if stopping_condition == StoppingCondition.absolute_improvement:
-                    condition_met = condition_absolute_improvement(f0, f1, eps=cond_eps)
-                else:
-                    condition_met = condition_relative_improvement(f0, f1, eps=cond_eps)
+                condition_met = condition_relative_improvement(f0, f1, eps=cond_eps)
             if condition_met:
                 break
+            if f1 > f0:
+                gamma2 = pow(gamma, f1 / f0)
+                gamma = gamma2
             w_hat0 = w_hat1
         self.result = w_hat1
 
